@@ -81,11 +81,47 @@ fn wm_upper_left(x: u32, y: u32, z:u32) -> PyResult<(f32, f32)> {
     Ok((lon_lat.0, lon_lat.1))
 }
 
-#[pyfunction]
-fn wm_bounds(x: u32, y: u32, z: u32) -> PyResult<(f32, f32, f32, f32)> {
+fn _wm_bounds(x: u32, y: u32, z: u32) -> (f32, f32, f32, f32) {
     let a = _wm_upper_left(x, y, z);
     let b = _wm_upper_left(x+1, y+1, z);
-    Ok((a.0, b.1+EPSILON32, b.0-EPSILON32, a.1)) // west, south, east, north
+    (a.0, b.1+EPSILON32, b.0-EPSILON32, a.1) // west, south, east, north
+}
+
+#[pyfunction]
+fn wm_bounds(x: u32, y: u32, z: u32) -> PyResult<(f32, f32, f32, f32)> {
+    Ok(_wm_bounds(x, y, z))
+}
+
+fn tile_center_lon_lat(west: f32, south: f32, east: f32, north: f32) -> (f32, f32) {
+    ((west + east) / 2.0, (south + north) / 2.0)
+}
+
+#[pyfunction]
+fn wm_tile_expanded_bbox(x: u32, y: u32, z: u32, expansion_meters: f32) -> PyResult<(f32, f32, f32, f32)> {
+    // based on http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates
+    let (tile_west, tile_south, tile_east, tile_north) = _wm_bounds(x, y, z);
+
+    // want a search circle that encompasses the tile, not a tile that encompasses the search circle
+    let corner_to_corner_meters = great_circle_distance(tile_west, tile_north, tile_east, tile_south)?;
+    let search_meters = (corner_to_corner_meters / 2.0) + expansion_meters;
+    let search_radians = search_meters / EARTH_RADIUS_METERS;
+
+    let (tile_center_lon, tile_center_lat) = tile_center_lon_lat(tile_west, tile_south, tile_east, tile_north);
+    let tile_center_lon_rad = f32::to_radians(tile_center_lon);
+    let tile_center_lat_rad = f32::to_radians(tile_center_lat);
+    let delta_lon_rad = f32::asin(f32::sin(search_radians) / f32::cos(tile_center_lat_rad));
+
+    let north_rad = tile_center_lat_rad + search_radians;
+    let south_rad = tile_center_lat_rad - search_radians;
+    let east_rad = tile_center_lon_rad + delta_lon_rad;
+    let west_rad = tile_center_lon_rad - delta_lon_rad;
+
+    let bbox_north = f32::to_degrees(north_rad);
+    let bbox_south = f32::to_degrees(south_rad);
+    let bbox_east = f32::to_degrees(east_rad);
+    let bbox_west = f32::to_degrees(west_rad);
+
+    Ok((bbox_west, bbox_south, bbox_east, bbox_north))
 }
 
 #[pymodule]
@@ -94,5 +130,6 @@ fn georgia(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(great_circle_distance, m)?)?;
     m.add_function(wrap_pyfunction!(wm_bounds, m)?)?;
     m.add_function(wrap_pyfunction!(wm_upper_left, m)?)?;
+    m.add_function(wrap_pyfunction!(wm_tile_expanded_bbox, m)?)?;
     Ok(())
 }
