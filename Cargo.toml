@@ -1,12 +1,12 @@
 [package]
-name = "georgia"
+name = "georgio"
 version = "0.1.0"
 edition = "2018"
 license = "Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
-name = "georgia"
+name = "georgio"
 crate-type = ["cdylib"]
 
 [dependencies]

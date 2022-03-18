@@ -4,13 +4,13 @@ import geopy.distance
 import mercantile
 import pytest
 
-import georgia
+import georgio
 
 from .locations import x_y_z_extensions
 
 @pytest.mark.parametrize("x, y, z, extension_meters", x_y_z_extensions)
 def test_wm_tile_expanded_bbox(x, y, z, extension_meters):
-    west, south, east, north = georgia.wm_tile_expanded_bbox(x, y, z, extension_meters)
+    west, south, east, north = georgio.wm_tile_expanded_bbox(x, y, z, extension_meters)
     tile_west, tile_south, tile_east, tile_north = mercantile.bounds(x, y, z)
     assert west < tile_west
     assert south < tile_south
@@ -35,7 +35,7 @@ def test_wm_tile_expanded_bbox(x, y, z, extension_meters):
 def test_wm_tile_expanded_bbox_benchmark(x, y, z, extension_meters):
     run_time = timeit(
         f"wm_tile_expanded_bbox({x}, {y}, {z}, {extension_meters})",
-        setup="from georgia import wm_tile_expanded_bbox",
+        setup="from georgio import wm_tile_expanded_bbox",
         number=100_000,
     )
     print("Average run time: {} ns".format(run_time/100_000*1_000_000_000))

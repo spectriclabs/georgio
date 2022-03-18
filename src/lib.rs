@@ -2,7 +2,7 @@
  * File: lib.rs
  * Copyright (c) 2022, Spectric Labs Inc., All rights reserved.
  *
- * This file is part of the georgia Python package.
+ * This file is part of the georgio Python package.
  *
  * Licensed to the Spectric Labs (Spectric) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -125,7 +125,7 @@ fn wm_tile_expanded_bbox(x: u32, y: u32, z: u32, expansion_meters: f32) -> PyRes
 }
 
 #[pymodule]
-fn georgia(_py: Python, m: &PyModule) -> PyResult<()> {
+fn georgio(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(great_circle_distance_with_radius, m)?)?;
     m.add_function(wrap_pyfunction!(great_circle_distance, m)?)?;
     m.add_function(wrap_pyfunction!(wm_bounds, m)?)?;
