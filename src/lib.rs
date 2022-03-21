@@ -96,24 +96,20 @@ fn tile_center_lon_lat(west: f32, south: f32, east: f32, north: f32) -> (f32, f3
 fn restrict_longitude(lon: f32) -> f32 {
     if lon < -180.0 {
         -180.0
-    } else {
-        if lon > 180.0 {
+    } else if lon > 180.0 {
             180.0
-        } else {
-            lon
-        }
+    } else {
+        lon
     }
 }
 
 fn restrict_latitude(lat: f32) -> f32 {
     if lat < -90.0 {
         -90.0
-    } else {
-        if lat > 90.0 {
+    } else if lat > 90.0 {
             90.0
-        } else {
-            lat
-        }
+    } else {
+        lat
     }
 }
 
