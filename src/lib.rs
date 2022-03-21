@@ -23,7 +23,6 @@
  */
 
 use std::f32::consts::PI;
-use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
 const EARTH_RADIUS_METERS: f32 = 6_371_009.0;  // https://en.wikipedia.org/wiki/Earth_radius#Mean_radius
@@ -35,9 +34,8 @@ fn valid_coordinates(lon: f32, lat: f32) -> bool {
 
 #[pyfunction]
 fn great_circle_distance_with_radius(lon1: f32, lat1: f32, lon2: f32, lat2: f32, radius: f32) -> PyResult<f32> {
-    if !valid_coordinates(lon1, lat1) || !valid_coordinates(lon2, lat2) {
-        return Err(PyValueError::new_err("Invalid coordinates"));
-    }
+    assert!(valid_coordinates(lon1, lat1));
+    assert!(valid_coordinates(lon2, lat2));
 
     // see https://github.com/geopy/geopy/blob/master/geopy/distance.py
     let lat1_rad = lat1.to_radians();
@@ -77,8 +75,7 @@ fn _wm_upper_left(x: u32, y: u32, z: u32) -> (f32, f32) {
 
 #[pyfunction]
 fn wm_upper_left(x: u32, y: u32, z:u32) -> PyResult<(f32, f32)> {
-    let lon_lat = _wm_upper_left(x, y, z);
-    Ok((lon_lat.0, lon_lat.1))
+    Ok(_wm_upper_left(x, y, z))
 }
 
 fn _wm_bounds(x: u32, y: u32, z: u32) -> (f32, f32, f32, f32) {
@@ -96,8 +93,33 @@ fn tile_center_lon_lat(west: f32, south: f32, east: f32, north: f32) -> (f32, f3
     ((west + east) / 2.0, (south + north) / 2.0)
 }
 
+fn restrict_longitude(lon: f32) -> f32 {
+    if lon < -180.0 {
+        -180.0
+    } else {
+        if lon > 180.0 {
+            180.0
+        } else {
+            lon
+        }
+    }
+}
+
+fn restrict_latitude(lat: f32) -> f32 {
+    if lat < -90.0 {
+        -90.0
+    } else {
+        if lat > 90.0 {
+            90.0
+        } else {
+            lat
+        }
+    }
+}
+
 #[pyfunction]
 fn wm_tile_expanded_bbox(x: u32, y: u32, z: u32, expansion_meters: f32) -> PyResult<(f32, f32, f32, f32)> {
+    assert!(expansion_meters >= 0.0);
     // based on http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates
     let (tile_west, tile_south, tile_east, tile_north) = _wm_bounds(x, y, z);
 
@@ -121,7 +143,12 @@ fn wm_tile_expanded_bbox(x: u32, y: u32, z: u32, expansion_meters: f32) -> PyRes
     let bbox_east = f32::to_degrees(east_rad);
     let bbox_west = f32::to_degrees(west_rad);
 
-    Ok((bbox_west, bbox_south, bbox_east, bbox_north))
+    Ok((
+        restrict_longitude(bbox_west),
+        restrict_latitude(bbox_south),
+        restrict_longitude(bbox_east),
+        restrict_latitude(bbox_north),
+    ))
 }
 
 #[pymodule]
