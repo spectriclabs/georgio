@@ -37,26 +37,28 @@ def test_wm_upper_left_benchmark():
     for lon_lat in lon_lats:
         for zoom in range(2, 20):
             tile = mercantile.tile(lon_lat[0], lon_lat[1], zoom)
-            georgio_results.append(timeit(
+            run_time = timeit(
                 f'wm_upper_left({tile.x}, {tile.y}, {tile.z})',
                 setup='from georgio import wm_upper_left',
                 number=10_000,
-            ))
+            )
+            georgio_results.append(run_time/10_000*1_000_000_000)
 
-    print(f'georgio fastest run: {min(georgio_results)}, slowest run: {max(georgio_results)}')
+    print(f'georgio fastest run: {min(georgio_results)} ns, slowest run: {max(georgio_results)} ns')
 
     jit_results = []
 
     for lon_lat in lon_lats:
         for zoom in range(2, 20):
             tile = mercantile.tile(lon_lat[0], lon_lat[1], zoom)
-            jit_results.append(timeit(
+            run_time = timeit(
                 f'jit_ul({tile.x}, {tile.y}, {tile.z})',
                 globals=globals(),
                 number=10_000,
-            ))
+            )
+            jit_results.append(run_time/10_000*1_000_000_000)
 
-    print(f'jit fastest run: {min(jit_results)}, slowest run: {max(jit_results)}')
+    print(f'jit fastest run: {min(jit_results)} ns, slowest run: {max(jit_results)} ns')
 
     # makes sure georgio's slowest run is faster than jit's fastest run
     #assert max(georgio_results) < min(jit_results)
@@ -75,26 +77,28 @@ def test_wm_bounds_benchmark():
     for lon_lat in lon_lats:
         for zoom in range(2, 20):
             tile = mercantile.tile(lon_lat[0], lon_lat[1], zoom)
-            georgio_results.append(timeit(
+            run_time = timeit(
                 f'wm_bounds({tile.x}, {tile.y}, {tile.z})',
                 setup='from georgio import wm_bounds',
                 number=10_000,
-            ))
+            )
+            georgio_results.append(run_time/10_000*1_000_000_000)
 
-    print(f'georgio fastest run: {min(georgio_results)}, slowest run: {max(georgio_results)}')
+    print(f'georgio fastest run: {min(georgio_results)} ns, slowest run: {max(georgio_results)} ns')
 
     jit_results = []
 
     for lon_lat in lon_lats:
         for zoom in range(2, 20):
             tile = mercantile.tile(lon_lat[0], lon_lat[1], zoom)
-            jit_results.append(timeit(
+            run_time = timeit(
                 f'jit_bounds({tile.x}, {tile.y}, {tile.z})',
                 globals=globals(),
                 number=10_000,
-            ))
+            )
+            jit_results.append(run_time/10_000*1_000_000_000)
 
-    print(f'jit fastest run: {min(jit_results)}, slowest run: {max(jit_results)}')
+    print(f'jit fastest run: {min(jit_results)} ns, slowest run: {max(jit_results)} ns')
 
     # makes sure georgio's slowest run is faster than jit's fastest run
     #assert max(georgio_results) < min(jit_results)

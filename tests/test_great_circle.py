@@ -26,13 +26,14 @@ def test_great_circle_benchmark():
         lat1 = pair[0][1]
         lon2 = pair[1][0]
         lat2 = pair[1][1]
-        georgio_results.append(timeit(
+        run_time = timeit(
             f'great_circle_distance({lon1}, {lat1}, {lon2}, {lat2})',
             setup='from georgio import great_circle_distance',
             number=10_000,
-        ))
+        )
+        georgio_results.append(run_time/10_000*1_000_000_000)
 
-    print(f'georgio fastest run: {min(georgio_results)}, slowest run: {max(georgio_results)}')
+    print(f'georgio fastest run: {min(georgio_results)} ns, slowest run: {max(georgio_results)} ns')
 
     geopy_results = []
 
@@ -41,13 +42,14 @@ def test_great_circle_benchmark():
         lat1 = pair[0][1]
         lon2 = pair[1][0]
         lat2 = pair[1][1]
-        geopy_results.append(timeit(
+        run_time = timeit(
             f'great_circle(({lat1}, {lon1}), ({lat2}, {lon2})).m',
             setup='from geopy.distance import great_circle',
             number=10_000,
-        ))
+        )
+        geopy_results.append(run_time/10_000*1_000_000_000)
 
-    print(f'geopy fastest run: {min(geopy_results)}, slowest run: {max(geopy_results)}')
+    print(f'geopy fastest run: {min(geopy_results)} ns, slowest run: {max(geopy_results)} ns')
 
     # makes sure georgio's slowest run is faster than geopy's fastest run
     assert max(georgio_results) < min(geopy_results)

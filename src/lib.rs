@@ -22,12 +22,12 @@
  * under the License.
  */
 
+use std::f32::consts::PI;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
 const EARTH_RADIUS_METERS: f32 = 6_371_009.0;  // https://en.wikipedia.org/wiki/Earth_radius#Mean_radius
 const EPSILON32: f32 = 1.0e-9;
-const PI32: f32 = 3.141592653589793238462643383279502884;
 
 fn valid_coordinates(lon: f32, lat: f32) -> bool {
     lat > -90.0 && lat < 90.0 && lon > -180.0 && lon < 180.0
@@ -71,7 +71,7 @@ fn great_circle_distance(lon1: f32, lat1: f32, lon2: f32, lat2: f32) -> PyResult
 fn _wm_upper_left(x: u32, y: u32, z: u32) -> (f32, f32) {
     let inv_z2: f32 = 1.0 / 2.0_f32.powi(z as i32);
     let lon = (x as f32) * inv_z2 * 360.0 - 180.0;
-    let lat = f32::to_degrees(f32::atan(f32::sinh(PI32 * (1.0 - 2.0 * (y as f32) * inv_z2))));
+    let lat = f32::to_degrees(f32::atan(f32::sinh(PI * (1.0 - 2.0 * (y as f32) * inv_z2))));
     (lon, lat)
 }
 
