@@ -30,10 +30,10 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: '3.9'
-    - name: Set version
-      uses: actions-rs/toolchain@v1
+    - uses: actions-rs/toolchain@v1
       with:
         toolchain: stable
+    - name: Set version
       run: |
         cargo install set-cargo-version
         set-cargo-version Cargo.toml `python scripts/generate_version.py`
