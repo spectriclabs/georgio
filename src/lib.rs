@@ -25,7 +25,7 @@
 use std::f32::consts::PI;
 use pyo3::prelude::*;
 
-const EARTH_RADIUS_METERS: f32 = 6_371_009.0;  // https://en.wikipedia.org/wiki/Earth_radius#Mean_radius
+const EARTH_RADIUS_METERS: f32 = 6_371_009.0;  // IUGG mean Earth radius; same as geopy
 const EPSILON32: f32 = 1.0e-9;
 
 fn valid_coordinates(lon: f32, lat: f32) -> bool {
