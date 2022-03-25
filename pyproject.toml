@@ -4,12 +4,19 @@ build-backend = "maturin"
 
 [project]
 name = "georgio"
+description = "Fast Geo Rust functions for Python"
+authors = [
+    {name = "Spectric Labs", email = "foss@spectric.com"},
+]
 requires-python = ">=3.7"
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
+
+[project.urls]
+repository = "https://github.com/spectriclabs/georgio"
 
 [tool.pytest.ini_options]
 addopts = "-ra"
