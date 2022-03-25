@@ -31,6 +31,9 @@ def test_wm_tile_expanded_bbox(x, y, z, extension_meters):
 
     assert bbox_corner_to_corner >= tile_extended_corner_to_corner
 
+    tile_corner_to_bbox_corner = geopy.distance.great_circle((tile_north, tile_east), (north, east)).m
+    assert tile_corner_to_bbox_corner >= extension_meters
+
 @pytest.mark.parametrize("x, y, z, extension_meters", x_y_z_extensions)
 def test_wm_tile_expanded_bbox_benchmark(x, y, z, extension_meters):
     run_time = timeit(
