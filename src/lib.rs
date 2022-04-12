@@ -28,10 +28,20 @@ use pyo3::prelude::*;
 const EARTH_RADIUS_METERS: f32 = 6_371_009.0;  // IUGG mean Earth radius; same as geopy
 const EPSILON32: f32 = 1.0e-9;
 
+/// Returns true if the specified coordinates are valid.
 fn valid_coordinates(lon: f32, lat: f32) -> bool {
     lat > -90.0 && lat < 90.0 && lon > -180.0 && lon < 180.0
 }
 
+/// Returns the greate circle distance in meters for a sphere of the specified radius.
+///
+/// # Arguments
+///
+/// * `lon1` - The longitude of the start location.
+/// * `lat1` - The latitude of the start location.
+/// * `lon2` - The longitude of the end location.
+/// * `lat2` - The latitude of the end location.
+/// * `radius` - The radius of the sphere in meters.
 #[pyfunction]
 fn great_circle_distance_with_radius(lon1: f32, lat1: f32, lon2: f32, lat2: f32, radius: f32) -> PyResult<f32> {
     assert!(valid_coordinates(lon1, lat1));
@@ -61,11 +71,28 @@ fn great_circle_distance_with_radius(lon1: f32, lat1: f32, lon2: f32, lat2: f32,
     Ok(radius * d)
 }
 
+/// Returns the great circle distance in meters for a sphere
+/// with Earth's IUGG mean radius.
+///
+/// # Arguments
+/// * `lon1` - The longitude of the start location.
+/// * `lat1` - The latitude of the start location.
+/// * `lon2` - The longitude of the end location.
+/// * `lat2` - The latitude of the end location.
 #[pyfunction]
 fn great_circle_distance(lon1: f32, lat1: f32, lon2: f32, lat2: f32) -> PyResult<f32> {
     great_circle_distance_with_radius(lon1, lat1, lon2, lat2, EARTH_RADIUS_METERS)
 }
 
+/// Returns the upper-left longitude and latitude for a
+/// Web Mercator tile.  This function is implemented separately
+/// because it is used by the exposed `wm_upper_left` pyfunction,
+/// and by `_wm_bounds`.
+///
+/// # Arguments
+/// * x - Tile x coordinate
+/// * y - Tile y coordinate
+/// * z - Tile zoom level
 fn _wm_upper_left(x: u32, y: u32, z: u32) -> (f32, f32) {
     let inv_z2: f32 = 1.0 / 2.0_f32.powi(z as i32);
     let lon = (x as f32) * inv_z2 * 360.0 - 180.0;
@@ -73,26 +100,75 @@ fn _wm_upper_left(x: u32, y: u32, z: u32) -> (f32, f32) {
     (lon, lat)
 }
 
+/// Returns the upper-left longitude and latitude for a
+/// Web Mercator tile.
+///
+/// # Arguments
+/// * x - Tile x coordinate
+/// * y - Tile y coordinate
+/// * z - Tile zoom level
 #[pyfunction]
 fn wm_upper_left(x: u32, y: u32, z:u32) -> PyResult<(f32, f32)> {
     Ok(_wm_upper_left(x, y, z))
 }
 
+/// Returns the boundaries for a Web Mercator tile in
+/// the following order:
+/// * West longitude
+/// * South latitude
+/// * East longitude
+/// * North latitude
+///
+/// This function is implemented separately because it is
+/// used by the exposed `wm_bounds` pyfunction as well as
+/// `wm_tile_expanded_bbox`.
+///
+/// # Arguments
+/// * x - Tile x coordinate
+/// * y - Tile y coordinate
+/// * z - Tile zoom level
 fn _wm_bounds(x: u32, y: u32, z: u32) -> (f32, f32, f32, f32) {
     let a = _wm_upper_left(x, y, z);
     let b = _wm_upper_left(x+1, y+1, z);
     (a.0, b.1+EPSILON32, b.0-EPSILON32, a.1) // west, south, east, north
 }
 
+/// Returns the boundaries for a Web Mercator tile in
+/// the following order:
+/// * West longitude
+/// * South latitude
+/// * East longitude
+/// * North latitude
+///
+/// # Arguments
+/// * x - Tile x coordinate.
+/// * y - Tile y coordinate.
+/// * z - Tile zoom level.
 #[pyfunction]
 fn wm_bounds(x: u32, y: u32, z: u32) -> PyResult<(f32, f32, f32, f32)> {
     Ok(_wm_bounds(x, y, z))
 }
 
+/// Returns the center coordinates of a tile with the specified boundaries
+/// as longitude and latitude.
+///
+/// # Arguments
+/// * west - Western longitude boundary.
+/// * south - Southern latitude boundary.
+/// * east - Eastern longitude boundary.
+/// * norht - Northern latitude boundary.
 fn tile_center_lon_lat(west: f32, south: f32, east: f32, north: f32) -> (f32, f32) {
     ((west + east) / 2.0, (south + north) / 2.0)
 }
 
+/// Ensures a longitude between -180 and 180 (inclusive).
+/// Longitudes beyond -180 are converted to -180.
+/// Longitudes beyond 180 are converted to 180.
+/// Longitudes in between -180 and 180 are returned
+/// as they are.
+///
+/// # Arguments
+/// * lon - The longitude to restrict.
 fn restrict_longitude(lon: f32) -> f32 {
     if lon < -180.0 {
         -180.0
@@ -103,6 +179,14 @@ fn restrict_longitude(lon: f32) -> f32 {
     }
 }
 
+/// Ensures a latitude between -90 and 90 (inclusive).
+/// Latitudes beyond -90 are converted to -90.
+/// Latitudes beyond 90 are converted to 90.
+/// Latitudes in between -90 and 90 are returned
+/// as they are.
+///
+/// # Arguments
+/// * lat - The latitude to restrict.
 fn restrict_latitude(lat: f32) -> f32 {
     if lat < -90.0 {
         -90.0
@@ -113,6 +197,26 @@ fn restrict_latitude(lat: f32) -> f32 {
     }
 }
 
+/// Returns a bounding box that surrounds a tile at a certain distance.
+/// Returns the bounding box boundaries in the following order:
+/// * West longitude
+/// * South latitude
+/// * East longitude
+/// * North latitude
+///
+/// This function can be useful when searching for centerpoints of objects
+/// that might be outside of the tile, where the object might extend into
+/// the tile.  Note that the bounding box size is calculated in the WGS-84
+/// projection based on the tile's longitude/latitude bounds, since Web
+/// Mercator is notoriously bad for calculating sizes/distances.  Also
+/// note that the bounding box will never extend across the antimeridian
+/// (longitude +/-180), below latitude -90, or above latitude 90.
+///
+/// # Arguments
+/// * x - Tile x coordinate.
+/// * y - Tile y coordinate.
+/// * z - Tile zoom level.
+/// * expansion_meters - Number of meters to expand the bounding box beyond the tile boundaries.
 #[pyfunction]
 fn wm_tile_expanded_bbox(x: u32, y: u32, z: u32, expansion_meters: f32) -> PyResult<(f32, f32, f32, f32)> {
     assert!(expansion_meters >= 0.0);
@@ -147,6 +251,7 @@ fn wm_tile_expanded_bbox(x: u32, y: u32, z: u32, expansion_meters: f32) -> PyRes
     ))
 }
 
+/// Specifies the functions to expose to Python.
 #[pymodule]
 fn georgio(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(great_circle_distance_with_radius, m)?)?;
