@@ -30,7 +30,7 @@ const EPSILON32: f32 = 1.0e-9;
 
 /// Returns true if the specified coordinates are valid.
 fn valid_coordinates(lon: f32, lat: f32) -> bool {
-    lat > -90.0 && lat < 90.0 && lon > -180.0 && lon < 180.0
+    lat >= -90.0 && lat <= 90.0 && lon >= -180.0 && lon <= 180.0
 }
 
 /// Returns the greate circle distance in meters for a sphere of the specified radius.
