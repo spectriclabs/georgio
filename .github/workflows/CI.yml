@@ -55,8 +55,9 @@ jobs:
       run: |
         cargo install set-cargo-version
         set-cargo-version Cargo.toml ${{needs.version_job.outputs.version}}
-    - uses: messense/maturin-action@v1
+    - uses: PyO3/maturin-action@v1
       with:
+        maturin-version: latest
         manylinux: auto
         command: build
         args: --release -o dist
@@ -78,8 +79,9 @@ jobs:
       run: |
         cargo install set-cargo-version
         set-cargo-version Cargo.toml ${{needs.version_job.outputs.version}}
-    - uses: messense/maturin-action@v1
+    - uses: PyO3/maturin-action@v1
       with:
+        maturin-version: latest
         command: build
         args: --release --no-sdist -o dist
     - name: Upload wheels
@@ -100,8 +102,9 @@ jobs:
       run: |
         cargo install set-cargo-version
         set-cargo-version Cargo.toml ${{needs.version_job.outputs.version}}
-    - uses: messense/maturin-action@v1
+    - uses: PyO3/maturin-action@v1
       with:
+        maturin-version: latest
         command: build
         args: --release --no-sdist -o dist --universal2
     - name: Upload wheels
