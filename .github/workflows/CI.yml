@@ -57,7 +57,7 @@ jobs:
         set-cargo-version Cargo.toml ${{needs.version_job.outputs.version}}
     - uses: PyO3/maturin-action@v1
       env:
-        PYO3_PYTHON=python3.10
+        PYO3_PYTHON: python3.10
       with:
         maturin-version: latest
         manylinux: auto
