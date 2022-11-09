@@ -61,7 +61,7 @@ jobs:
         maturin-version: latest
         manylinux: auto
         command: build
-        args: --release -o dist
+        args: --release -o dist -i python3.9 -i python3.10
     - name: Upload wheels
       uses: actions/upload-artifact@v2
       with:
