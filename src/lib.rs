@@ -84,6 +84,48 @@ fn great_circle_distance(lon1: f32, lat1: f32, lon2: f32, lat2: f32) -> PyResult
     great_circle_distance_with_radius(lon1, lat1, lon2, lat2, EARTH_RADIUS_METERS)
 }
 
+/// Returns a bounding box around a point
+/// Returns the bounding box boundaries in the following order:
+/// * West longitude
+/// * South latitude
+/// * East longitude
+/// * North latitude
+///
+/// Note that the bounding box will never extend across the antimeridian
+/// (longitude +/-180), below latitude -90, or above latitude 90.
+///
+/// # Arguments
+/// * `lon` - The longitude of the starting point.
+/// * `lat` - The latitude of the starting point.
+/// * `distance_meters` - The distance to each side of the bounding box from the starting point.
+#[pyfunction]
+fn bounding_box_for_point(lon: f32, lat: f32, distance_meters: f32) -> PyResult<(f32, f32, f32, f32)> {
+    assert!(valid_coordinates(lon, lat));
+    assert!(distance_meters >= 0.0);
+
+    let dist_radians = distance_meters / EARTH_RADIUS_METERS;
+    let lon_rad = f32::to_radians(lon);
+    let lat_rad = f32::to_radians(lat);
+    let delta_lon_rad = f32::asin(f32::sin(dist_radians) / f32::cos(lat_rad));
+
+    let north_rad = lat_rad + dist_radians;
+    let south_rad = lat_rad - dist_radians;
+    let east_rad = lon_rad + delta_lon_rad;
+    let west_rad = lon_rad - delta_lon_rad;
+
+    let bbox_north = f32::to_degrees(north_rad);
+    let bbox_south = f32::to_degrees(south_rad);
+    let bbox_east = f32::to_degrees(east_rad);
+    let bbox_west = f32::to_degrees(west_rad);
+
+    Ok((
+        restrict_longitude(bbox_west),
+        restrict_latitude(bbox_south),
+        restrict_longitude(bbox_east),
+        restrict_latitude(bbox_north),
+    ))
+}
+
 /// Returns the upper-left longitude and latitude for a
 /// Web Mercator tile.  This function is implemented separately
 /// because it is used by the exposed `wm_upper_left` pyfunction,
@@ -256,6 +298,7 @@ fn wm_tile_expanded_bbox(x: u32, y: u32, z: u32, expansion_meters: f32) -> PyRes
 fn georgio(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(great_circle_distance_with_radius, m)?)?;
     m.add_function(wrap_pyfunction!(great_circle_distance, m)?)?;
+    m.add_function(wrap_pyfunction!(bounding_box_for_point, m)?)?;
     m.add_function(wrap_pyfunction!(wm_bounds, m)?)?;
     m.add_function(wrap_pyfunction!(wm_upper_left, m)?)?;
     m.add_function(wrap_pyfunction!(wm_tile_expanded_bbox, m)?)?;

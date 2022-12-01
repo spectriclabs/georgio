@@ -16,6 +16,15 @@ If you want to provide your own radius in meters, you can use this function inst
 distance_in_meters = georgio.great_circle_distance_with_radius(lon1, lat1, lon2, lat2, radius_in_meters)
 ```
 
+## Bounding Box
+
+This function will return a bounding box that's this specified distance around a particular center point.
+Note that the bounding box will never extend across the antimeridian (longitude +/-180), below latitude -90, or above latitude 90.
+
+```python
+west, south, east, north = georgio.bounding_box_for_point(lon, lat, distance_in_meters)
+```
+
 ## Web Mercator
 
 To get the longitude/latitude bounds of a Web Mercator tile, use the following function, which will return the values in west, south, east, north order.
