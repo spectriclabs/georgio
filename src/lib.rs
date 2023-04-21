@@ -1,6 +1,6 @@
 /*
  * File: lib.rs
- * Copyright (c) 2022, Spectric Labs Inc., All rights reserved.
+ * Copyright (c) 2023, Spectric Labs Inc., All rights reserved.
  *
  * This file is part of the georgio Python package.
  *
@@ -25,7 +25,7 @@
 use std::f32::consts::PI;
 use pyo3::prelude::*;
 
-const EARTH_RADIUS_METERS: f32 = 6_371_009.0;  // IUGG mean Earth radius; same as geopy
+const EARTH_RADIUS_METERS: f32 = 6_371_008.8;  // IUGG mean Earth radius
 const EPSILON32: f32 = 1.0e-9;
 
 /// Returns true if the specified coordinates are valid.
@@ -82,6 +82,47 @@ fn great_circle_distance_with_radius(lon1: f32, lat1: f32, lon2: f32, lat2: f32,
 #[pyfunction]
 fn great_circle_distance(lon1: f32, lat1: f32, lon2: f32, lat2: f32) -> PyResult<f32> {
     great_circle_distance_with_radius(lon1, lat1, lon2, lat2, EARTH_RADIUS_METERS)
+}
+
+/// Returns coordinates at the specified distance and bearing
+/// for a sphere with the specified radius.
+///
+/// # Arguments
+/// * `lon` - The longitude of the start point.
+/// * `lat` - The latitude of the start point.
+/// * `bearing` - The bearing to follow in degrees, clockwise from north.
+/// * `distance` - The distance in meters.
+/// * `radius` - The radius in meters.
+#[pyfunction]
+fn line_of_bearing_with_radius(lon: f32, lat: f32, bearing: f32, distance: f32, radius: f32) -> PyResult<(f32, f32)> {
+    let rad_bearing = f32::to_radians(bearing);
+    let rad_lat = f32::to_radians(lat);
+    let rad_lon = f32::to_radians(lon);
+    let d_div_r = distance / radius;
+    let rad_new_lat = f32::asin(
+        f32::sin(rad_lat)*f32::cos(d_div_r) +
+        f32::cos(rad_lat)*f32::sin(d_div_r)*f32::cos(rad_bearing)
+    );
+    let rad_new_lon = rad_lon + f32::atan2(
+        f32::sin(rad_bearing)*f32::sin(d_div_r)*f32::cos(rad_lat),
+        f32::cos(d_div_r)-f32::sin(rad_lat)*f32::sin(rad_new_lat)
+    );
+    let new_lat = f32::to_degrees(rad_new_lat);
+    let new_lon = f32::to_degrees(rad_new_lon);
+    return Ok((new_lon, new_lat))
+}
+
+/// Returns coordinates at the specified distance and bearing
+/// for a sphere with Earth's IUGG mean radius.
+///
+/// # Arguments
+/// * `lon` - The longitude of the start point.
+/// * `lat` - The latitude of the start point.
+/// * `bearing` - The bearing to follow in degrees, clockwise from north.
+/// * `distance` - The distance in meters.
+#[pyfunction]
+fn line_of_bearing(lon: f32, lat: f32, bearing: f32, distance: f32) -> PyResult<(f32, f32)> {
+    line_of_bearing_with_radius(lon, lat, bearing, distance, EARTH_RADIUS_METERS)
 }
 
 /// Returns a bounding box around a point
@@ -295,9 +336,11 @@ fn wm_tile_expanded_bbox(x: u32, y: u32, z: u32, expansion_meters: f32) -> PyRes
 
 /// Specifies the functions to expose to Python.
 #[pymodule]
-fn georgio(_py: Python, m: &PyModule) -> PyResult<()> {
+fn georgio(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(great_circle_distance_with_radius, m)?)?;
     m.add_function(wrap_pyfunction!(great_circle_distance, m)?)?;
+    m.add_function(wrap_pyfunction!(line_of_bearing_with_radius, m)?)?;
+    m.add_function(wrap_pyfunction!(line_of_bearing, m)?)?;
     m.add_function(wrap_pyfunction!(bounding_box_for_point, m)?)?;
     m.add_function(wrap_pyfunction!(wm_bounds, m)?)?;
     m.add_function(wrap_pyfunction!(wm_upper_left, m)?)?;
