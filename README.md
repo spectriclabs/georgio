@@ -4,7 +4,7 @@ Fast **geo** **R**ust helper functions for Python.
 
 ## Great Circle
 
-To get the great circle distance between two points in meters, this function will use the IUGG mean Earth radius (same as geopy).
+To get the great circle distance between two points in meters, this function will use the IUGG mean Earth radius.
 
 ```python
 distance_in_meters = georgio.great_circle_distance(lon1, lat1, lon2, lat2)
@@ -16,9 +16,23 @@ If you want to provide your own radius in meters, you can use this function inst
 distance_in_meters = georgio.great_circle_distance_with_radius(lon1, lat1, lon2, lat2, radius_in_meters)
 ```
 
+## Line Of Bearing (LOB)
+
+Returns the destination coordinates based on a starting position, bearing, and distance in meters.  Bearing is in degrees, clockwise from north.  It uses the IUGG mean Earth radius.
+
+```python
+dest_lon, dest_lat = georgio.line_of_bearing(start_lon, start_lat, bearing_in_degrees, distance_in_meters)
+```
+
+If you want to provide your own radius in meters, you can use this function instead.
+
+```python
+dest_lon, dest_lat = georgio.line_of_bearing_with_radius(start_lon, start_lat, bearing_in_degrees, distance_in_meters, radius_in_meters)
+```
+
 ## Bounding Box
 
-This function will return a bounding box that's this specified distance around a particular center point.
+This function will return a bounding box that encompasses  the specified distance around a center point.
 Note that the bounding box will never extend across the antimeridian (longitude +/-180), below latitude -90, or above latitude 90.
 
 ```python
