@@ -30,7 +30,7 @@ const EPSILON32: f32 = 1.0e-9;
 
 /// Returns true if the specified coordinates are valid.
 fn valid_coordinates(lon: f32, lat: f32) -> bool {
-    lat >= -90.0 && lat <= 90.0 && lon >= -180.0 && lon <= 180.0
+    (-90.0..=90.0).contains(&lat) && (-180.0..=180.0).contains(&lon)
 }
 
 /// Returns the greate circle distance in meters for a sphere of the specified radius.
@@ -109,7 +109,7 @@ fn line_of_bearing_with_radius(lon: f32, lat: f32, bearing: f32, distance: f32, 
     );
     let new_lat = f32::to_degrees(rad_new_lat);
     let new_lon = f32::to_degrees(rad_new_lon);
-    return Ok((new_lon, new_lat))
+    Ok((new_lon, new_lat))
 }
 
 /// Returns coordinates at the specified distance and bearing
