@@ -69,7 +69,7 @@ jobs:
         command: build
         args: --release -o dist -i python3.9 -i python3.10
     - name: Upload wheels
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: wheels
         path: dist
@@ -95,7 +95,7 @@ jobs:
         command: build
         args: --release -o dist
     - name: Upload wheels
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: wheels
         path: dist
@@ -121,7 +121,7 @@ jobs:
         command: build
         args: --release -o dist --universal2
     - name: Upload wheels
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: wheels
         path: dist
