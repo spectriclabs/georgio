@@ -177,6 +177,7 @@ fn bounding_box_for_point(lon: f32, lat: f32, distance_meters: f32) -> PyResult<
 /// * y - Tile y coordinate
 /// * z - Tile zoom level
 fn _wm_upper_left(x: u32, y: u32, z: u32) -> (f32, f32) {
+    // useful link: https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection/
     let inv_z2: f32 = 1.0 / 2.0_f32.powi(z as i32);
     let lon = (x as f32) * inv_z2 * 360.0 - 180.0;
     let lat = f32::to_degrees(f32::atan(f32::sinh(PI * (1.0 - 2.0 * (y as f32) * inv_z2))));
@@ -323,8 +324,10 @@ fn wm_tile_expanded_bbox(x: u32, y: u32, z: u32, expansion_meters: f32) -> PyRes
 
     let bbox_north = f32::to_degrees(north_rad);
     let bbox_south = f32::to_degrees(south_rad);
-    let bbox_east = f32::to_degrees(east_rad);
-    let bbox_west = f32::to_degrees(west_rad);
+
+    // have to handle case where delta_lon_rad is NaN, like when x=0, y=0, z=1, expansion_meters=1
+    let bbox_east = if !delta_lon_rad.is_nan() { f32::to_degrees(east_rad) } else { tile_east };
+    let bbox_west = if !delta_lon_rad.is_nan() { f32::to_degrees(west_rad) } else { tile_west };
 
     Ok((
         restrict_longitude(bbox_west),

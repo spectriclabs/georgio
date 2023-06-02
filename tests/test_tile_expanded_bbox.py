@@ -38,6 +38,11 @@ def test_wm_tile_expanded_bbox(x, y, z, extension_meters):
     tile_corner_to_bbox_corner = geopy.distance.great_circle((tile_north, tile_east), (exp_north, exp_east)).m
     assert tile_corner_to_bbox_corner >= extension_meters
 
+def test_wm_tile_expanded_bbox_nan():
+    # This will raise an uncatchable pyo3_runtime.PanicException
+    # if not handled properly in Rust.
+    georgio.wm_tile_expanded_bbox(0, 0, 1, 1)
+
 @pytest.mark.parametrize("x, y, z, extension_meters", x_y_z_extensions)
 def test_wm_tile_expanded_bbox_benchmark(x, y, z, extension_meters):
     run_time = timeit(
