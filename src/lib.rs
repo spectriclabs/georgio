@@ -23,14 +23,20 @@
  */
 
 use std::f32::consts::PI;
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
 const EARTH_RADIUS_METERS: f32 = 6_371_008.8;  // IUGG mean Earth radius
 const EPSILON32: f32 = 1.0e-9;
 
-/// Returns true if the specified coordinates are valid.
-fn valid_coordinates(lon: f32, lat: f32) -> bool {
-    (-90.0..=90.0).contains(&lat) && (-180.0..=180.0).contains(&lon)
+/// Raises a Python ValueError if the coordinates are not valid.
+#[pyfunction]
+fn valid_coordinates(lon: f32, lat: f32) -> PyResult<()> {
+    if !(-90.0..=90.0).contains(&lat) || !(-180.0..=180.0).contains(&lon) {
+        return Err(PyValueError::new_err("invalid coordinates"));
+    }
+
+    Ok(())
 }
 
 /// Returns the greate circle distance in meters for a sphere of the specified radius.
@@ -44,8 +50,8 @@ fn valid_coordinates(lon: f32, lat: f32) -> bool {
 /// * `radius` - The radius of the sphere in meters.
 #[pyfunction]
 fn great_circle_distance_with_radius(lon1: f32, lat1: f32, lon2: f32, lat2: f32, radius: f32) -> PyResult<f32> {
-    assert!(valid_coordinates(lon1, lat1));
-    assert!(valid_coordinates(lon2, lat2));
+    valid_coordinates(lon1, lat1)?;
+    valid_coordinates(lon2, lat2)?;
 
     // see https://github.com/geopy/geopy/blob/master/geopy/distance.py
     let lat1_rad = lat1.to_radians();
@@ -95,6 +101,8 @@ fn great_circle_distance(lon1: f32, lat1: f32, lon2: f32, lat2: f32) -> PyResult
 /// * `radius` - The radius in meters.
 #[pyfunction]
 fn line_of_bearing_with_radius(lon: f32, lat: f32, bearing: f32, distance: f32, radius: f32) -> PyResult<(f32, f32)> {
+    valid_coordinates(lon, lat)?;
+
     let rad_bearing = f32::to_radians(bearing);
     let rad_lat = f32::to_radians(lat);
     let rad_lon = f32::to_radians(lon);
@@ -141,8 +149,11 @@ fn line_of_bearing(lon: f32, lat: f32, bearing: f32, distance: f32) -> PyResult<
 /// * `distance_meters` - The distance to each side of the bounding box from the starting point.
 #[pyfunction]
 fn bounding_box_for_point(lon: f32, lat: f32, distance_meters: f32) -> PyResult<(f32, f32, f32, f32)> {
-    assert!(valid_coordinates(lon, lat));
-    assert!(distance_meters >= 0.0);
+    valid_coordinates(lon, lat)?;
+
+    if distance_meters < 0.0 {
+        return Err(PyValueError::new_err("negative distance"));
+    }
 
     let dist_radians = distance_meters / EARTH_RADIUS_METERS;
     let lon_rad = f32::to_radians(lon);

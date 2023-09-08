@@ -8,6 +8,14 @@ import georgio
 
 from .locations import lon_lats
 
+def test_invalid_longitude():
+    with pytest.raises(ValueError):
+        georgio.great_circle_distance(181.0, 40.712, -0.1275, 51.507222)
+
+def test_invalid_latitude():
+    with pytest.raises(ValueError):
+        georgio.great_circle_distance(-74.006111, 40.712, -0.1275, -100.0)
+
 def test_great_circle_distance():
     for pair in permutations(lon_lats, 2):
         lon1 = pair[0][0]

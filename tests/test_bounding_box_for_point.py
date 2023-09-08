@@ -4,6 +4,10 @@ import georgio
 
 from .locations import lon_lats
 
+def test_invalid_distance():
+    with pytest.raises(ValueError):
+        georgio.bounding_box_for_point(-74.006111, 40.712778, -4.0)
+
 def test_bounding_box_for_point():
     distances = (100.0, 1000.0, 10000.0)
 
