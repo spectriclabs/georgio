@@ -265,13 +265,7 @@ fn tile_center_lon_lat(west: f64, south: f64, east: f64, north: f64) -> (f64, f6
 /// # Arguments
 /// * lon - The longitude to restrict.
 fn restrict_longitude(lon: f64) -> f64 {
-    if lon < -180.0 {
-        -180.0
-    } else if lon > 180.0 {
-            180.0
-    } else {
-        lon
-    }
+    lon.clamp(-180.0, 180.0)
 }
 
 /// Ensures a latitude between -90 and 90 (inclusive).
@@ -283,13 +277,7 @@ fn restrict_longitude(lon: f64) -> f64 {
 /// # Arguments
 /// * lat - The latitude to restrict.
 fn restrict_latitude(lat: f64) -> f64 {
-    if lat < -90.0 {
-        -90.0
-    } else if lat > 90.0 {
-            90.0
-    } else {
-        lat
-    }
+    lat.clamp(-90.0, 90.0)
 }
 
 /// Returns a bounding box that surrounds a tile at a certain distance.
